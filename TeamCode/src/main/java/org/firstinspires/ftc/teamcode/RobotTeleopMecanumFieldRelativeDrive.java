@@ -28,14 +28,39 @@
  */
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvWebcam;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
+
 /*
  * This OpMode illustrates how to program your robot to drive field relative.  This means
  * that the robot drives the direction you push the joystick regardless of the current orientation
@@ -49,20 +74,35 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  *
+ *
  */
 @TeleOp(name = "Robot: Field Relative Mecanum Drive", group = "Robot")
-public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
+//public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
+public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
     // This declares the four motors needed
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
 
+    DcMotor intakeMotor;
+    DcMotor shooterL;
+    DcMotor shooterR;
+    DcMotor passer;
+    CRServo passerServo;
+
+    VisionPortal.Builder builder;
+    VisionPortal visionPortal;
+    AprilTagProcessor aprilTag;
+
+    //final CameraStreamProcessor cameraStreamProcessor = new CameraStreamProcessor();
+    OpenCvWebcam openCvWebcam;
+
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
     @Override
-    public void init() {
+    public void runOpMode() throws InterruptedException {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontL");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontR");
         backLeftDrive = hardwareMap.get(DcMotor.class, "backL");
@@ -83,34 +123,100 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection =
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new
                 RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
-    }
 
-    @Override
-    public void loop() {
-        telemetry.addLine("Press A to reset Yaw");
-        telemetry.addLine("Hold left bumper to drive in robot relative");
-        telemetry.addLine("The left joystick sets the robot direction");
-        telemetry.addLine("Moving the right joystick left and right turns the robot");
 
-        // If you press the A button, then you reset the Yaw to be zero from the way
-        // the robot is currently pointing
-        if (gamepad1.a) {
-            imu.resetYaw();
-        }
-        // If you press the left bumper, you get a drive from the point of view of the robot
-        // (much like driving an RC vehicle)
-        if (gamepad1.left_bumper) {
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-        } else {
+        intakeMotor = hardwareMap.get(DcMotor.class, "intaker");
+        shooterL = hardwareMap.get(DcMotor.class, "shooterL");
+        shooterR = hardwareMap.get(DcMotor.class, "shooterR");
+        shooterR.setDirection(DcMotorSimple.Direction.REVERSE);
+        passer = hardwareMap.get(DcMotor.class, "Mpasser");
+        passerServo = hardwareMap.get(CRServo.class, "passer");
+
+        //final CameraStreamProcessor processor = new CameraStreamProcessor();
+
+        /*new VisionPortal.Builder()
+                .addProcessor(processor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .build();*/
+
+        //FtcDashboard.getInstance().startCameraStream(processor, 0);
+
+        /*VisionPortal.Builder builder = new VisionPortal.Builder();
+        //WebcamName webcamname = hardwareMap.get(WebcamName.class, "Webcam 1");
+        builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        // Build the Vision Portal, using the above settings.
+        VisionPortal visionPortal = builder.build();*/
+
+        initAprilTag();
+        // Wait for the DS start button to be touched.
+        telemetry.addData("DS preview on/off", "3 dots, Camera Stream");
+        telemetry.addData(">", "Touch START to start OpMode");
+        telemetry.update();
+
+        waitForStart();
+
+        if(isStopRequested()) return;
+
+        while(opModeIsActive()) {
+            telemetry.addLine("Press B to reset Yaw");
+
+            telemetryAprilTag();
+
+            // Push telemetry to the Driver Station.
+            telemetry.update();
+
+            //FtcDashboard.getInstance().sendImage(cameraStreamProcessor.get);
+            //FtcDashboard.getInstance().sendImage(cameraStreamProcessor);
+            //FtcDashboard.getInstance().startCameraStream(cameraStreamProcessor, 0);
+
+            //visionPortal.resumeStreaming();
+
+            // If you press the A button, then you reset the Yaw to be zero from the way
+            // the robot is currently pointing
+            if (gamepad1.b) {
+                imu.resetYaw();
+            }
+
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+
+            if(gamepad1.left_trigger > .2) {
+                intakeMotor.setPower(.75);
+            } else {
+                intakeMotor.setPower(0);
+            }
+
+            if(gamepad1.right_trigger > .2 && gamepad1.b) {
+                shooterL.setPower(.7);
+                shooterR.setPower(.7);
+            } else if(gamepad1.right_trigger > .2 && gamepad1.a) {
+                shooterL.setPower(.5);
+                shooterR.setPower(.5);
+            } else if(gamepad1.right_trigger > .2) {
+                shooterL.setPower(.65);
+                shooterR.setPower(.65);
+            } else {
+                shooterL.setPower(0);
+                shooterR.setPower(0);
+            }
+
+            if(gamepad1.left_bumper) {
+                passer.setPower(1);
+                passerServo.setPower(.75);
+            } else {
+                passer.setPower(0);
+                passerServo.setPower(0);
+            }
         }
+
+        // Save more CPU resources when camera is no longer needed.
+        //visionPortal.close();
     }
 
     // This routine drives the robot field relative
@@ -158,5 +264,125 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
         backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+    }
+
+    private void initAprilTag() {
+
+        // Create the AprilTag processor.
+        aprilTag = new AprilTagProcessor.Builder()
+
+                // The following default settings are available to un-comment and edit as needed.
+                //.setDrawAxes(false)
+                //.setDrawCubeProjection(false)
+                //.setDrawTagOutline(true)
+                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
+                //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
+                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+
+                // == CAMERA CALIBRATION ==
+                // If you do not manually specify calibration parameters, the SDK will attempt
+                // to load a predefined calibration for your camera.
+                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
+                // ... these parameters are fx, fy, cx, cy.
+
+                .build();
+
+        // Adjust Image Decimation to trade-off detection-range for detection-rate.
+        // eg: Some typical detection data using a Logitech C920 WebCam
+        // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
+        // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
+        // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
+        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
+        // Note: Decimation can be changed on-the-fly to adapt during a match.
+        //aprilTag.setDecimation(3);
+
+        // Create the vision portal by using a builder.
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        // Set the camera (webcam vs. built-in RC phone camera).
+        //if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        //} else {
+        //    builder.setCamera(BuiltinCameraDirection.BACK);
+        //}
+
+        // Choose a camera resolution. Not all cameras support all resolutions.
+        //builder.setCameraResolution(new Size(640, 480));
+
+        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
+        builder.enableLiveView(true);
+
+        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
+        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
+
+        // Choose whether or not LiveView stops if no processors are enabled.
+        // If set "true", monitor shows solid orange screen if no processors enabled.
+        // If set "false", monitor shows camera view without annotations.
+        //builder.setAutoStopLiveView(false);
+
+        // Set and enable the processor.
+        builder.addProcessor(aprilTag);
+
+        // Build the Vision Portal, using the above settings.
+        visionPortal = builder.build();
+
+        // Disable or re-enable the aprilTag processor at any time.
+        visionPortal.setProcessorEnabled(aprilTag, true);
+
+
+
+    }   // end method initAprilTag()
+
+    private void telemetryAprilTag() {
+
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+        // Step through the list of detections and display info for each one.
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }   // end for() loop
+
+        // Add "key" information to telemetry
+        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.addLine("RBE = Range, Bearing & Elevation");
+
+    }   // end method telemetryAprilTag()
+
+    public static class CameraStreamProcessor implements VisionProcessor, CameraStreamSource {
+        private final AtomicReference<Bitmap> lastFrame =
+                new AtomicReference<>(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
+
+        @Override
+        public void init(int width, int height, CameraCalibration calibration) {
+            lastFrame.set(Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565));
+        }
+
+        @Override
+        public Object processFrame(Mat frame, long captureTimeNanos) {
+            Bitmap b = Bitmap.createBitmap(frame.width(), frame.height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(frame, b);
+            lastFrame.set(b);
+            return null;
+        }
+
+        @Override
+        public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
+            // do nothing
+        }
+
+        @Override
+        public void getFrameBitmap(Continuation<? extends Consumer<Bitmap>> continuation) {
+            continuation.dispatch(bitmapConsumer -> bitmapConsumer.accept(lastFrame.get()));
+        }
     }
 }
