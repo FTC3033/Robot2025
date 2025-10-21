@@ -13,6 +13,13 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
+
 @Autonomous(name="Auto1", group="Robot")
 public class Auto1 extends LinearOpMode  {
     public static double DISTANCE = 64;
@@ -22,6 +29,8 @@ public class Auto1 extends LinearOpMode  {
     private DcMotor intakeMotor;
     private DcMotor passer;
     private CRServo passerServo;
+
+    AprilTagProcessor aprilTag;
 
 
 
@@ -35,6 +44,8 @@ public class Auto1 extends LinearOpMode  {
         shooterR.setDirection(DcMotorSimple.Direction.REVERSE);
         passer = hardwareMap.get(DcMotor.class, "Mpasser");
         passerServo = hardwareMap.get(CRServo.class, "passer");
+
+        initAprilTag();
 
         waitForStart();
 
@@ -81,6 +92,44 @@ public class Auto1 extends LinearOpMode  {
                 shooterMotor2.setPower(.75);
             }
 
+
+            return false;
+        }
+    }
+
+    public class AimActionRed implements Action {
+
+        MecanumDrive drive;
+
+        public AimActionRed(MecanumDrive drive) {
+            this.drive = drive;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            // Red 24
+            // Blue 20
+            int targetId = 20;
+
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.metadata != null) {
+                    if(detection.id == targetId) {
+                        if(detection.ftcPose.x < 0.5) {
+                            Actions.runBlocking(drive.actionBuilder(new Pose2d(0,0,0))
+                                    .turn(-0.5)
+                                    .build());
+                        } else if(detection.ftcPose.x > 0.5) {
+                            Actions.runBlocking(drive.actionBuilder(new Pose2d(0,0,0))
+                                    .turn(0.5)
+                                    .build());
+                        } else {
+                            return true;
+                        }
+                    }
+                }
+            }
 
             return false;
         }
@@ -135,4 +184,10 @@ public class Auto1 extends LinearOpMode  {
             return false;
         }
     }
+
+    private void initAprilTag() {
+
+        // Create the AprilTag processor.
+        aprilTag = new AprilTagProcessor.Builder().build();
+    }   // end method initAprilTag()
 }
