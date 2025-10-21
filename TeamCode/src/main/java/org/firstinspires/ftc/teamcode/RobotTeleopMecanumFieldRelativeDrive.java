@@ -184,6 +184,17 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
                 imu.resetYaw();
             }
 
+            if(gamepad1.x) {
+                // Red 24
+                // Blue 20
+                if(aimAtTarget(24)) {
+                    telemetry.addLine("aimAtTarget returned true");
+                } else {
+                    telemetry.addLine("aimAtTarget returned false");
+                }
+
+            }
+
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
             if(gamepad1.left_trigger > .2) {
@@ -332,6 +343,26 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
 
     }   // end method initAprilTag()
+
+    public boolean aimAtTarget(int targetId) {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                if(detection.id == targetId) {
+                    if(detection.ftcPose.x < 0.5) {
+                        drive(0.0, 0.0, -0.5);
+                    } else if(detection.ftcPose.x > 0.5) {
+                        drive(0.0, 0.0, 0.5);
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 
     private void telemetryAprilTag() {
 

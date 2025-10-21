@@ -87,7 +87,8 @@ public class MeepMeepTesting {
                 .build());*/
 
         // Red side test 2
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-60.0, 11.5, 0.0))
+        //myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-60.0, 11.5, 0.0))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-52.0, 47.0, 43.05))
                 // move to the shoot point
                 .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-43.0))
                 // move to the first row
