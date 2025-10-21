@@ -57,7 +57,7 @@ public class MeepMeepTesting {
                 .build());*/
 
         // Red side test 1
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(60.0, 13.0, 0.0))
+        /*myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(60.0, 13.0, 0.0))
                 // move to the shoot point
                 .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-40.0))
                 // move to the first row
@@ -84,6 +84,37 @@ public class MeepMeepTesting {
                 .strafeToLinearHeading(new Vector2d(-11.0, 30.0), Math.toRadians(90.0))
                 // move to the shoot point
                 .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-40.0))
+                .build());*/
+
+        // Red side test 2
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-60.0, 11.5, 0.0))
+                // move to the shoot point
+                .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-43.0))
+                // move to the first row
+                //.strafeToLinearHeading(new Vector2d(35.0, 30.0), Math.toRadians(90.0))
+                .strafeToLinearHeading(new Vector2d(-11.0, 30.0), Math.toRadians(90.0))
+                // move down
+                .strafeToLinearHeading(new Vector2d(-11.0, 53.0), Math.toRadians(90.0))
+                // move up
+                .strafeToLinearHeading(new Vector2d(-11.0, 30.0), Math.toRadians(90.0))
+                // move to the shoot point
+                .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-40))
+                // Move to the second row
+                .strafeToLinearHeading(new Vector2d(11.0, 30.0), Math.toRadians(90.0))
+                // move down
+                .strafeToLinearHeading(new Vector2d(11.0, 60.0), Math.toRadians(90.0))
+                // move up
+                .strafeToLinearHeading(new Vector2d(11.0, 30.0), Math.toRadians(90.0))
+                // move to the shoot point
+                .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-43.0))
+                // move to the third row
+                .strafeToLinearHeading(new Vector2d(35.0, 30.0), Math.toRadians(90.0))
+                // move down
+                .strafeToLinearHeading(new Vector2d(34.0, 60.0), Math.toRadians(90.0))
+                // move up
+                .strafeToLinearHeading(new Vector2d(34.0, 30.0), Math.toRadians(90.0))
+                // move to the shoot point
+                .strafeToLinearHeading(new Vector2d(-23.0, 23.0), Math.toRadians(-43.0))
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_OFFICIAL)
