@@ -56,7 +56,6 @@ public class BlueAuto extends LinearOpMode  {
 
     @Override
     public void runOpMode() throws InterruptedException {
-//        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-18,-22,215));
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0,0,0));
 
         intakeMotor = hardwareMap.get(DcMotor.class, "intaker");

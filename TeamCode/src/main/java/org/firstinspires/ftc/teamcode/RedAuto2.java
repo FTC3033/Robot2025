@@ -17,15 +17,17 @@ import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-@Autonomous(name="BlueAuto2", group="LM1")
+@Autonomous(name="RedAuto2", group="LM1")
 @Config
-public class BlueAuto2 extends LinearOpMode  {
+public class RedAuto2 extends LinearOpMode  {
 
     private DcMotorEx shooterR;
     private DcMotorEx shooterL;
@@ -44,8 +46,8 @@ public class BlueAuto2 extends LinearOpMode  {
 
     public static double PASSER_WAIT_TIME = 2.5;
 
-    public static Vector2d BLUE_SHOOT_LOCATION = new Vector2d(-18.0, -15.0);
-    public static double BLUE_SHOOT_ANGLE =  Math.toRadians(43.0);
+    public static Vector2d BLUE_SHOOT_LOCATION = new Vector2d(-18.0, 15.0);
+    public static double BLUE_SHOOT_ANGLE =  Math.toRadians(-43.0);
 
     public static double PASSER_SERVO_POWER = 1.0;
     public static double PASSER_MOTOR_POWER = -1.0;
@@ -56,7 +58,7 @@ public class BlueAuto2 extends LinearOpMode  {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-53.0, -53.0, Math.toRadians(45)));
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-52.0, 47.0, Math.toRadians(43.05)));
 
         // Setup the intake motor
         intakeMotor = hardwareMap.get(DcMotor.class, "intaker");
@@ -95,11 +97,11 @@ public class BlueAuto2 extends LinearOpMode  {
 
         Actions.runBlocking(
                 new ParallelAction(
-                    drive.actionBuilder(new Pose2d(-53.0, -53.0, Math.toRadians(45)))
+                    drive.actionBuilder(new Pose2d(-52.0, 47.0, Math.toRadians(43.05)))
                         // Move to the shoot location
                         //.strafeToLinearHeading(new Vector2d(-18.0, -15.0), Math.toRadians(43.0))
                         .strafeToLinearHeading(BLUE_SHOOT_LOCATION, BLUE_SHOOT_ANGLE)
-                        .stopAndAdd(new AimActionBlue(drive))
+                        .stopAndAdd(new AimActionRed(drive))
 
                         // start to shoot
                         // Turn on the intake
@@ -113,9 +115,9 @@ public class BlueAuto2 extends LinearOpMode  {
 
                         // move to the first row
                         //.stopAndAdd(new IntakeAction(intakeMotor, false))
-                        .strafeToLinearHeading(new Vector2d(-11.0, -16.0), Math.toRadians(-140.0))
+                        .strafeToLinearHeading(new Vector2d(-11.0, 16.0), Math.toRadians(90.0))
                         // move down
-                        .strafeToLinearHeading(new Vector2d(-11.0, -52.0), Math.toRadians(-140.0)) // y was originally 49. im testing it as 40
+                        .strafeToLinearHeading(new Vector2d(-11.0, 40.0), Math.toRadians(90.0)) // y was originally 49. im testing it as 40
                         // move up
                         //.strafeToLinearHeading(new Vector2d(-11.0, -22.0), Math.toRadians(90.0))
                         // Turn off the intake
@@ -132,9 +134,9 @@ public class BlueAuto2 extends LinearOpMode  {
 
                         // Move to the second row
                         //.stopAndAdd(new IntakeAction(intakeMotor, false))
-                        .strafeToLinearHeading(new Vector2d(11.0, -22.0), Math.toRadians(-140.0))
+                        .strafeToLinearHeading(new Vector2d(11.0, 22.0), Math.toRadians(90.0))
                         // move down
-                        .strafeToLinearHeading(new Vector2d(11.0, -52.0), Math.toRadians(-140.0))
+                        .strafeToLinearHeading(new Vector2d(11.0, 40.0), Math.toRadians(90.0))
                         // move up
                         //.strafeToLinearHeading(new Vector2d(11.0, -22.0), Math.toRadians(90.0))
                         // Turn off the intake
@@ -153,9 +155,9 @@ public class BlueAuto2 extends LinearOpMode  {
                         // move to the third row
                         // Turn on the intake
                         //.stopAndAdd(new IntakeAction(intakeMotor, false))
-                        .strafeToLinearHeading(new Vector2d(35.0, -18.0), Math.toRadians(-140.0))
+                        .strafeToLinearHeading(new Vector2d(35.0, 18.0), Math.toRadians(90.0))
                         // move down
-                        .strafeToLinearHeading(new Vector2d(34.0, -52), Math.toRadians(-140.0))
+                        .strafeToLinearHeading(new Vector2d(34.0, 42), Math.toRadians(90.0))
                         // move up
                         //.strafeToLinearHeading(new Vector2d(34.0, -22.0), Math.toRadians(90.0))
                         // Turn off the intake
@@ -251,14 +253,14 @@ public class BlueAuto2 extends LinearOpMode  {
         aprilTag = new AprilTagProcessor.Builder().build();
     }
 
-    public class AimActionBlue implements Action {
+    public class AimActionRed implements Action {
 
         MecanumDrive drive;
         private boolean keepRunning = true;
         List<AprilTagDetection> currentDetections;
         String currentDetectionsString = "";
 
-        public AimActionBlue(MecanumDrive drive) {
+        public AimActionRed(MecanumDrive drive) {
             this.drive = drive;
 
             Timer timer = new Timer();
