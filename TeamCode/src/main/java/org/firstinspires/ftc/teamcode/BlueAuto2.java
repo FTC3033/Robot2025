@@ -50,6 +50,8 @@ public class BlueAuto2 extends LinearOpMode  {
     public static double PASSER_SERVO_POWER = 1.0;
     public static double PASSER_MOTOR_POWER = -1.0;
 
+    public static double INTAKE_MOTOR_POWER = .75;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -236,7 +238,7 @@ public class BlueAuto2 extends LinearOpMode  {
             if(finished) {
                 intakeMotor.setPower(0.0);
             } else {
-                intakeMotor.setPower(.75);
+                intakeMotor.setPower(INTAKE_MOTOR_POWER);
             }
 
             return false;
@@ -318,10 +320,4 @@ public class BlueAuto2 extends LinearOpMode  {
             return keepRunning;
         }
     }
-
-
-
-    /// //////////////////////////////////////
-
-
 }
