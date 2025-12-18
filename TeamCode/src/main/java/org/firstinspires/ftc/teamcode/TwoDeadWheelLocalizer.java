@@ -16,6 +16,7 @@ import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -54,7 +55,8 @@ public final class TwoDeadWheelLocalizer implements Localizer {
         perp = new OverflowEncoder(new RawEncoder(hardwareMap.get(DcMotorEx.class, "intaker")));
 
         // TODO: reverse encoder directions if needed
-        perp.setDirection(DcMotor.Direction.REVERSE);
+        //par.setDirection(DcMotor.Direction.REVERSE);
+        //perp.setDirection(DcMotor.Direction.REVERSE);
 
         this.imu = imu;
 

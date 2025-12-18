@@ -36,6 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -84,10 +85,13 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
     DcMotor backRightDrive;
+    boolean slow = false;
+    boolean norm = false;
+    int reverse = 1;
 
     DcMotor intakeMotor;
-    DcMotor shooterL;
-    DcMotor shooterR;
+    DcMotorEx shooterL;
+    DcMotorEx shooterR;
     DcMotor passer;
     CRServo passerServo;
 
@@ -133,8 +137,8 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
 
         intakeMotor = hardwareMap.get(DcMotor.class, "intaker");
-        shooterL = hardwareMap.get(DcMotor.class, "shooterL");
-        shooterR = hardwareMap.get(DcMotor.class, "shooterR");
+        shooterL = hardwareMap.get(DcMotorEx.class, "shooterL");
+        shooterR = hardwareMap.get(DcMotorEx.class, "shooterR");
         shooterR.setDirection(DcMotorSimple.Direction.REVERSE);
         passer = hardwareMap.get(DcMotor.class, "Mpasser");
         passerServo = hardwareMap.get(CRServo.class, "passer");
@@ -184,7 +188,13 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            if(gamepad1.x) {
+            if(gamepad1.left_trigger > .2) {
+                reverse = -1;
+            } else {
+                reverse = 1;
+            }
+
+            if(gamepad1.y) {
                 // Red 24
                 // Blue 20
                 if(aimAtTarget(24)) {
@@ -197,12 +207,17 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-            if(gamepad1.left_trigger > .2) {
-                intakeMotor.setPower(.75);
+            if(gamepad1.left_trigger > .2 || reverse<0) {
+                intakeMotor.setPower(.75 * reverse);
+                //passer.setPower(.8 * reverse);
             } else {
+                //passer.setPower(0);
                 intakeMotor.setPower(0);
             }
 
+            // booleans for shooters speed
+
+            /*
             if(gamepad1.right_trigger > .2 && gamepad1.b) {
                 shooterL.setPower(.7);
                 shooterR.setPower(.7);
@@ -216,14 +231,48 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
                 shooterL.setPower(0);
                 shooterR.setPower(0);
             }
+            */
+            //set shooters speed
+             if(gamepad1.a){
+                 norm = !norm;
+                 slow = false;
+                 sleep(200);
+             } else if (gamepad1.x) {
+                 norm = false;
+                 slow = !slow;
+                 sleep(200);
+             }
 
-            if(gamepad1.left_bumper) {
-                passer.setPower(1);
-                passerServo.setPower(.75);
+            //remove fast mode
+            if(norm){
+                 shooterL.setPower(.5 ); //1400
+                 shooterR.setPower(.5 );
+             } else if (slow) {
+                shooterL.setPower(.67); //1180
+                //velocity = 767.676767x^2*2967.67676767x where x is power
+                shooterR.setPower(.67);
+             }else {
+                 shooterR.setPower(0);
+                 shooterL.setPower(0);
+             }
+            if(shooterR.getPower() > 0 && shooterL.getPower() > 0){
+                telemetry.addLine("Shooter Power = " + ((shooterR.getPower()+shooterL.getPower())/2) );
+                telemetry.addLine("Shooter Speed = " + shooterL.getVelocity() );
+                telemetry.addLine("Shooter Target Speed?:" + ((((767.6767 * (Math.pow(shooterL.getPower(),2))) + (2967.6767 * shooterL.getPower()))>=shooterL.getVelocity() - 40)));
+            }
+
+            if(gamepad1.right_bumper) {
+                passer.setPower(-.7 * reverse);
+                passerServo.setPower(1 * reverse);
             } else {
                 passer.setPower(0);
                 passerServo.setPower(0);
             }
+//            if(gamepad1.dpad_down && gamepad1.right_bumper) {
+//                passer.setPower(-1);
+//                passerServo.setPower(-1);
+//
+//            }
         }
 
         // Save more CPU resources when camera is no longer needed.
