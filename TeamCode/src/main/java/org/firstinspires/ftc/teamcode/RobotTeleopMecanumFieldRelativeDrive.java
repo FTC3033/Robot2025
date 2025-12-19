@@ -29,6 +29,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -60,6 +61,7 @@ import android.graphics.Canvas;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 
 /*
@@ -78,6 +80,7 @@ import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
  *
  */
 @TeleOp(name = "Robot: Field Relative Mecanum Drive", group = "Robot")
+@Config
 //public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
 public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
     // This declares the four motors needed
@@ -104,6 +107,10 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
+
+    private int TARGET_LEFT = 220;
+    private int TARGET_RIGHT = 280;
+    private double TARGET_ROTATE_SPEED = 0.25;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -166,9 +173,9 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
         waitForStart();
 
-        if(isStopRequested()) return;
+        if (isStopRequested()) return;
 
-        while(opModeIsActive()) {
+        while (opModeIsActive()) {
             telemetry.addLine("Press B to reset Yaw");
 
             telemetryAprilTag();
@@ -188,16 +195,16 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            if(gamepad1.left_trigger > .2) {
+            if (gamepad1.left_trigger > .2) {
                 reverse = -1;
             } else {
                 reverse = 1;
             }
 
-            if(gamepad1.y) {
+            if (gamepad1.y) {
                 // Red 24
                 // Blue 20
-                if(aimAtTarget(24)) {
+                if (aimAtTarget(24)) {
                     telemetry.addLine("aimAtTarget returned true");
                 } else {
                     telemetry.addLine("aimAtTarget returned false");
@@ -207,7 +214,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
             driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
-            if(gamepad1.left_trigger > .2 || reverse<0) {
+            if (gamepad1.left_trigger > .2 || reverse < 0) {
                 intakeMotor.setPower(.75 * reverse);
                 //passer.setPower(.8 * reverse);
             } else {
@@ -233,35 +240,35 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
             }
             */
             //set shooters speed
-             if(gamepad1.a){
-                 norm = !norm;
-                 slow = false;
-                 sleep(200);
-             } else if (gamepad1.x) {
-                 norm = false;
-                 slow = !slow;
-                 sleep(200);
-             }
+            if (gamepad1.a) {
+                norm = !norm;
+                slow = false;
+                sleep(200);
+            } else if (gamepad1.x) {
+                norm = false;
+                slow = !slow;
+                sleep(200);
+            }
 
             //remove fast mode
-            if(norm){
-                 shooterL.setPower(.5 ); //1400
-                 shooterR.setPower(.5 );
-             } else if (slow) {
+            if (norm) {
+                shooterL.setPower(.5); //1400
+                shooterR.setPower(.5);
+            } else if (slow) {
                 shooterL.setPower(.67); //1180
                 //velocity = 767.676767x^2*2967.67676767x where x is power
                 shooterR.setPower(.67);
-             }else {
-                 shooterR.setPower(0);
-                 shooterL.setPower(0);
-             }
-            if(shooterR.getPower() > 0 && shooterL.getPower() > 0){
-                telemetry.addLine("Shooter Power = " + ((shooterR.getPower()+shooterL.getPower())/2) );
-                telemetry.addLine("Shooter Speed = " + shooterL.getVelocity() );
-                telemetry.addLine("Shooter Target Speed?:" + ((((767.6767 * (Math.pow(shooterL.getPower(),2))) + (2967.6767 * shooterL.getPower()))>=shooterL.getVelocity() - 40)));
+            } else {
+                shooterR.setPower(0);
+                shooterL.setPower(0);
+            }
+            if (shooterR.getPower() > 0 && shooterL.getPower() > 0) {
+                telemetry.addLine("Shooter Power = " + ((shooterR.getPower() + shooterL.getPower()) / 2));
+                telemetry.addLine("Shooter Speed = " + shooterL.getVelocity());
+                telemetry.addLine("Shooter Target Speed?:" + ((((767.6767 * (Math.pow(shooterL.getPower(), 2))) + (2967.6767 * shooterL.getPower())) >= shooterL.getVelocity() - 40)));
             }
 
-            if(gamepad1.right_bumper) {
+            if (gamepad1.right_bumper) {
                 passer.setPower(-.7 * reverse);
                 passerServo.setPower(1 * reverse);
             } else {
@@ -361,7 +368,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
 
         // Set the camera (webcam vs. built-in RC phone camera).
         //if (USE_WEBCAM) {
-            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
         //} else {
         //    builder.setCamera(BuiltinCameraDirection.BACK);
         //}
@@ -390,24 +397,23 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
         visionPortal.setProcessorEnabled(aprilTag, true);
 
 
-
     }   // end method initAprilTag()
 
     public boolean aimAtTarget(int targetId) {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                if(detection.id == targetId) {
-                    if(detection.ftcPose.x < 0.5) {
-                        drive(0.0, 0.0, -0.5);
-                    } else if(detection.ftcPose.x > 0.5) {
-                        drive(0.0, 0.0, 0.5);
+            //if (detection.metadata != null) {
+                //if (detection.id == targetId) {
+                    if (detection.center.x < TARGET_LEFT) {
+                        drive(0.0, 0.0, -TARGET_ROTATE_SPEED);
+                    } else if (detection.center.x > TARGET_RIGHT) {
+                        drive(0.0, 0.0, TARGET_ROTATE_SPEED);
                     } else {
                         return true;
                     }
-                }
-            }
+                //}
+            //}
         }
 
         return false;
@@ -425,6 +431,8 @@ public class RobotTeleopMecanumFieldRelativeDrive extends LinearOpMode {
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
                 telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
                 telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+
+
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));

@@ -17,6 +17,9 @@ import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import java.util.List;
@@ -51,6 +54,8 @@ public class BlueAuto2 extends LinearOpMode  {
     public static double PASSER_MOTOR_POWER = -1.0;
 
     public static double INTAKE_MOTOR_POWER = .75;
+
+    private VisionPortal visionPortal;
 
 
     @Override
@@ -99,7 +104,7 @@ public class BlueAuto2 extends LinearOpMode  {
                         // Move to the shoot location
                         //.strafeToLinearHeading(new Vector2d(-18.0, -15.0), Math.toRadians(43.0))
                         .strafeToLinearHeading(BLUE_SHOOT_LOCATION, BLUE_SHOOT_ANGLE)
-                        .stopAndAdd(new AimActionBlue(drive))
+                        //.stopAndAdd(new AimActionBlue(drive))
 
                         // start to shoot
                         // Turn on the intake
@@ -191,8 +196,12 @@ public class BlueAuto2 extends LinearOpMode  {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
 
+            List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+
             telemetryPacket.put("Left Velocity", shooterL.getVelocity());
             telemetryPacket.put("Right Velocity", shooterR.getVelocity());
+            telemetryPacket.put("# AprilTags Detected", currentDetections.size());
+
             return true;
         }
     }
@@ -249,6 +258,13 @@ public class BlueAuto2 extends LinearOpMode  {
 
         // Create the AprilTag processor.
         aprilTag = new AprilTagProcessor.Builder().build();
+
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+        builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        builder.enableLiveView(true);
+        builder.setAutoStopLiveView(false);
+        builder.addProcessor(aprilTag);
+        visionPortal = builder.build();
     }
 
     public class AimActionBlue implements Action {
@@ -311,7 +327,8 @@ public class BlueAuto2 extends LinearOpMode  {
                                     .turn(0.5)
                                     .build());
                         } else {
-                            return keepRunning;
+                            // We are within range so return false to stop
+                            return false;
                         }
                     }
                 }
