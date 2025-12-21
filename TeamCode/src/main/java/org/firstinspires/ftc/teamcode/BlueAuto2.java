@@ -55,6 +55,10 @@ public class BlueAuto2 extends LinearOpMode  {
 
     public static double INTAKE_MOTOR_POWER = .75;
 
+    private int TARGET_LEFT = 220;
+    private int TARGET_RIGHT = 280;
+    private double TARGET_ROTATE_SPEED = 0.25;
+
     private VisionPortal visionPortal;
 
 
@@ -313,7 +317,7 @@ public class BlueAuto2 extends LinearOpMode  {
 
             // Go through all of the april tag detections
             for (AprilTagDetection detection : currentDetections) {
-                if (detection.metadata != null) {
+                /*if (detection.metadata != null) {
                     currentDetectionsString = currentDetectionsString + " " + detection.id;
 
                     // Do we see the tag 20 (blue tag)?
@@ -330,6 +334,20 @@ public class BlueAuto2 extends LinearOpMode  {
                             // We are within range so return false to stop
                             return false;
                         }
+                    }
+                }*/
+
+                if(detection.id == 20) {
+                    if (detection.center.x < TARGET_LEFT) {
+                        Actions.runBlocking(drive.actionBuilder(new Pose2d(0, 0, 0))
+                                .turn(-TARGET_ROTATE_SPEED)
+                                .build());
+                    } else if (detection.center.x > TARGET_RIGHT) {
+                        Actions.runBlocking(drive.actionBuilder(new Pose2d(0, 0, 0))
+                                .turn(TARGET_ROTATE_SPEED)
+                                .build());
+                    } else {
+                        return false;
                     }
                 }
             }

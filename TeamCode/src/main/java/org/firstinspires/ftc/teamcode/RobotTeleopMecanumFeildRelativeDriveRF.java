@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -37,9 +38,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.function.Consumer;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
@@ -79,6 +82,7 @@ import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
  *
  */
 @TeleOp(name = "Robot: Field Relative Mecanum Drive fix reverse", group = "Robot")
+@Config
 //public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
 public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
     // This declares the four motors needed
@@ -104,6 +108,17 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
+
+    public static int TARGET_LEFT = 220;
+    public static int TARGET_RIGHT = 280;
+    public static double TARGET_ROTATE_SPEED = 0.25;
+
+    public static double SHOOTER_PID_P = 3.5;
+    public static double SHOOTER_PID_I = 0.0;
+    public static double SHOOTER_PID_D = 0.0;
+    public static double SHOOTER_PID_F = 0.0;
+    public static double SHOOTER_MOTOR_VELOCITY_CLOSE = 1500;
+    public static double SHOOTER_MOTOR_VELOCITY_FAR = 1500;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -165,6 +180,25 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
         telemetry.update();
 
         waitForStart();
+
+        ///////////
+
+        PIDFCoefficients leftShooterPID = new PIDFCoefficients(SHOOTER_PID_P, SHOOTER_PID_I, SHOOTER_PID_D, SHOOTER_PID_F);
+
+        // Create a DcMotorControllerEx to get the PID set for the motor
+        DcMotorControllerEx leftMotorControllerEx = (DcMotorControllerEx)shooterL.getController();
+
+        // Get the index for the motor
+        int leftMotorIndex = ((DcMotorEx)shooterL).getPortNumber();
+
+        // Apply the PID to the motor controller
+        leftMotorControllerEx.setPIDFCoefficients(leftMotorIndex, DcMotor.RunMode.RUN_USING_ENCODER, leftShooterPID);
+
+        // Set the velocity for the shooter motors
+        //shooterL.setVelocity(SHOOTER_MOTOR_VELOCITY);
+        //shooterR.setVelocity(SHOOTER_MOTOR_VELOCITY);
+
+        ///////////
 
         if(isStopRequested()) return;
 
@@ -246,12 +280,14 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
 
             //remove fast mode
             if(norm){
-                shooterL.setPower(.55 ); //1400
-                shooterR.setPower(.55 );
+                shooterL.setVelocity(SHOOTER_MOTOR_VELOCITY_CLOSE);
+                shooterR.setVelocity(SHOOTER_MOTOR_VELOCITY_CLOSE);
             } else if (slow) {
-                shooterL.setPower(.5); //1180
+                //shooterL.setPower(.5); //1180
                 //velocity = 767.676767x^2*2967.67676767x where x is power
-                shooterR.setPower(.5);
+                //shooterR.setPower(.5);
+                shooterL.setVelocity(SHOOTER_MOTOR_VELOCITY_FAR);
+                shooterR.setVelocity(SHOOTER_MOTOR_VELOCITY_FAR);
             }else {
                 shooterR.setPower(0);
                 shooterL.setPower(0);
@@ -398,17 +434,17 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                if(detection.id == targetId) {
-                    if(detection.ftcPose.x < 0.5) {
-                        drive(0.0, 0.0, -0.5);
-                    } else if(detection.ftcPose.x > 0.5) {
-                        drive(0.0, 0.0, 0.5);
-                    } else {
-                        return true;
-                    }
-                }
+            //if (detection.metadata != null) {
+            //if (detection.id == targetId) {
+            if (detection.center.x < TARGET_LEFT) {
+                drive(0.0, 0.0, -TARGET_ROTATE_SPEED);
+            } else if (detection.center.x > TARGET_RIGHT) {
+                drive(0.0, 0.0, TARGET_ROTATE_SPEED);
+            } else {
+                return true;
             }
+            //}
+            //}
         }
 
         return false;
@@ -421,7 +457,7 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
 
         // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
+            /*if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
                 telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
@@ -429,8 +465,11 @@ public class RobotTeleopMecanumFeildRelativeDriveRF extends LinearOpMode {
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }   // end for() loop
+            }*/
+
+            telemetry.addLine(String.format("\n==== (ID %d)", detection.id));
+            telemetry.addLine(String.format("Center %6.0f %6.0f (pixels)", detection.center.x, detection.center.y));
+        }
 
         // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
